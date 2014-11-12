@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Octree.h"
+
 class Octocad
 {
     // Opengl window and matrixes (CPU)
@@ -17,6 +19,9 @@ class Octocad
 
     // Transfered to the shader program.
     GLint mv_location, proj_location;
+
+    // Test Octree
+    Octree *testTree;
 
     void SetupViewport();
     bool WindowInitialization();

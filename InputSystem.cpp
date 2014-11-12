@@ -3,12 +3,16 @@
 
 InputSystem::ResizeEventData InputSystem::resizeEvent;
 InputSystem::KeyTypedData InputSystem::keyTypedEvent;
+bool InputSystem::addCubeButton;
+bool InputSystem::removeCubeButton;
 
 void InputSystem::Initialize(void)
 {
     // Setup all the event handlers to indicate that nothing occurred.
     resizeEvent.resizeEvent = false;
     keyTypedEvent.charEvent = false;
+    addCubeButton = false;
+    removeCubeButton = false;
 }
 
 void InputSystem::KeyTyped(GLFWwindow *pWindow, unsigned int character)
@@ -29,6 +33,29 @@ bool InputSystem::KeyTypedEvent(char& character)
 
 void InputSystem::KeyEvent(GLFWwindow *pWindow, int key, int scancode, int action, int mods)
 {
+    switch (key)
+    {
+    case GLFW_KEY_A:
+        if (action == GLFW_PRESS)
+        {
+            addCubeButton = true;
+        }
+        else if (action == GLFW_RELEASE)
+        {
+            addCubeButton = false;
+        }
+        break;
+    case GLFW_KEY_R:
+        if (action == GLFW_PRESS)
+        {
+            removeCubeButton = true;
+        }
+        else if (action == GLFW_RELEASE)
+        {
+            removeCubeButton = false;
+        }
+        break;
+    }
 }
 
 void InputSystem::MouseButtonEvent(GLFWwindow *pWindow, int button, int action, int mods)

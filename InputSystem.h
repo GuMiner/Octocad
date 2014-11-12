@@ -22,6 +22,8 @@ class InputSystem
     static KeyTypedData keyTypedEvent;
 
 public:
+    static bool addCubeButton;
+    static bool removeCubeButton; // HACK TODO
     static bool KeyTypedEvent(char& character);
     static bool ResizeEvent(int& width, int& height);
 
@@ -38,4 +40,3 @@ public:
 
     static void Initialize(void);
 };
-

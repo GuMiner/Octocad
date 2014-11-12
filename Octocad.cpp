@@ -129,11 +129,34 @@ bool Octocad::ApplicationSetup()
     mv_location = glGetUniformLocation(boringProgram, "mv_matrix");
     proj_location = glGetUniformLocation(boringProgram, "proj_matrix");
 
+    // -----------------------------------
+    //   Non Open GL portions
+    // -----------------------------------
+    double smallScale = 0.008;
+    testTree = new Octree(2, smallScale, false); // Small fudge factor so that we have exactly four boxes, regardless of operation.
+    /*for (double i = -1; i < 1; i += smallScale/2)
+    {
+        for (double j = -1; j < 1; j += smallScale/2)
+        {
+            for (double k = -1; k < 1; k += smallScale/2)
+            {
+                if ((int)(i*1000) % 20 == 0 || (int)(j*1000) % 20 == 0 || (int)(k*1000) % 20 == 0)
+                {
+                    testTree->AddCube(i, j, k);
+                }
+            }
+        }
+    }*/
+
+    // -----------------------------------
+
     return true;
 }
 
 Octocad::~Octocad()
 {
+    delete testTree;
+
     // Application shutdown.
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &pointBuffer);
@@ -158,72 +181,20 @@ void Octocad::SetupViewport()
 
 void Octocad::Render(double currentTime)
 {
-    // Load up a cube for simple testing
-    vertexCount = 36;
-    colorVertex *pVertices = new colorVertex[vertexCount];
-    
-    static const GLfloat vertex_positions[] =
+        colorVertex *pVertices = testTree->Triangulate(vertexCount);
+
+    // Skip rendering if there's nothing to render.
+    if (vertexCount == 0)
     {
-        -0.25f,  0.25f, -0.25f,
-        -0.25f, -0.25f, -0.25f,
-        0.25f, -0.25f, -0.25f,
-
-        0.25f, -0.25f, -0.25f,
-        0.25f,  0.25f, -0.25f,
-        -0.25f,  0.25f, -0.25f,
-
-        0.25f, -0.25f, -0.25f,
-        0.25f, -0.25f,  0.25f,
-        0.25f,  0.25f, -0.25f,
-
-        0.25f, -0.25f,  0.25f,
-        0.25f,  0.25f,  0.25f,
-        0.25f,  0.25f, -0.25f,
-
-        0.25f, -0.25f,  0.25f,
-        -0.25f, -0.25f,  0.25f,
-        0.25f,  0.25f,  0.25f,
-
-        -0.25f, -0.25f,  0.25f,
-        -0.25f,  0.25f,  0.25f,
-        0.25f,  0.25f,  0.25f,
-
-        -0.25f, -0.25f,  0.25f,
-        -0.25f, -0.25f, -0.25f,
-        -0.25f,  0.25f,  0.25f,
-
-        -0.25f, -0.25f, -0.25f,
-        -0.25f,  0.25f, -0.25f,
-        -0.25f,  0.25f,  0.25f,
-
-        -0.25f, -0.25f,  0.25f,
-        0.25f, -0.25f,  0.25f,
-        0.25f, -0.25f, -0.25f,
-
-        0.25f, -0.25f, -0.25f,
-        -0.25f, -0.25f, -0.25f,
-        -0.25f, -0.25f,  0.25f,
-
-        -0.25f,  0.25f, -0.25f,
-        0.25f,  0.25f, -0.25f,
-        0.25f,  0.25f,  0.25f,
-
-        0.25f,  0.25f,  0.25f,
-        -0.25f,  0.25f,  0.25f,
-        -0.25f,  0.25f, -0.25f
-    };
-    
-    // Load up the cube
-    for (GLsizei i = 0; i < vertexCount; i++)
-    {
-        pVertices[i].Set(vertex_positions[i*3], vertex_positions[i*3 + 1], vertex_positions[i*3 + 2], (double)i/12, (double)i/12, (double)i/12);
+       // return;
     }
 
-    glBufferData(GL_ARRAY_BUFFER, vertexCount*sizeof(colorVertex), pVertices, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertexCount*sizeof(colorVertex), pVertices, GL_STATIC_DRAW);
 
+    // Delete the verticies after sending them into OpenGL
     delete [] pVertices;
 
-    lookAt = gm::Lookat(gm::vec3(0, 0, 0), gm::vec3(0, 0, 6), gm::vec3(0, 1, 0));
+    lookAt = gm::Lookat(gm::vec3(0, 0, 0), gm::vec3(2, 0, 6), gm::vec3(0, 1, 0));
     glUseProgram(boringProgram);
 
     const GLfloat color[] = {0, 0, 0, 1};
@@ -240,18 +211,25 @@ void Octocad::Render(double currentTime)
         {
             for (int k = 0; k < 1; k++)
             {
-                gm::mat4 mv_matrix = gm::Rotate((float)currentTime/5.0f, gm::vec3(0.0f, 1.0f, 0.0f));
+                gm::mat4 mv_matrix = gm::Rotate((float)currentTime*0.5f, gm::vec3(0.0f, 1.0f, 0.0f));
                 glUniformMatrix4fv(mv_location, 1, GL_FALSE, mv_matrix);
-                glDrawArraysInstanced(GL_TRIANGLES, 0, vertexCount, 100);
+                glDrawArrays(GL_TRIANGLES, 0, vertexCount); //Instanced = 1
             }
         }
     }
 }
 
-bool Octocad::RunApplication()
+bool Octocad::RunApplication()                                                              
 {
-    double timeDelta = 1.0f/(double)GLManager::FPS_TARGET;
-    double lastTime = (double)glfwGetTime();
+   // double timeDelta = 1.0/(double)GLManager::FPS_TARGET;
+  //  double lastTime = (double)glfwGetTime();
+
+        // Load up what's in the octree for display
+
+
+    double lastDisplayTime = glfwGetTime();//lastTime;
+    long frameCounter = 0;
+
     while (GLManager::GetManager()->running)
     {
         // Draw and swap buffers
@@ -275,15 +253,64 @@ bool Octocad::RunApplication()
         }
         //------------------
 
+        char typedKey;
+        if (InputSystem::KeyTypedEvent(typedKey))
+        {
+            switch(typedKey)
+            {
+            case 'a': 
+                testTree->AddCube((double)rand()*2.0 / (double)RAND_MAX - 1.0, (double)rand()*2.0 / (double)RAND_MAX - 1.0, (double)rand()*2.0 / (double)RAND_MAX - 1.0);
+                std::cout << "+ Cube" << std::endl;
+                break;
+            case 'r':
+                testTree->DeleteCube((double)rand()*2.0 / (double)RAND_MAX - 1.0, (double)rand()*2.0 / (double)RAND_MAX - 1.0, (double)rand()*2.0 / (double)RAND_MAX - 1.0);
+                std::cout << "- Cube" << std::endl;
+                break;
+            case 'n':
+                testTree = new Octree(2, 0.26, true); // Small fudge factor so that we have exactly four boxes, regardless of operation.
+                break;
+            case 'e':
+                testTree = new Octree(2, 0.51, false); // Small fudge factor so that we have exactly four boxes, regardless of operation.
+                break;
+            default:
+                std::cout << "What?" << std::endl;
+                break;
+            }
+        }
+
+        if (InputSystem::addCubeButton)
+        {
+            for (int i = 0; i < 100; i++)
+            {
+                testTree->AddCube((double)rand()*2.0 / (double)RAND_MAX - 1.0, (double)rand()*2.0 / (double)RAND_MAX - 1.0, (double)rand()*2.0 / (double)RAND_MAX - 1.0);
+            }
+        }
+        if (InputSystem::removeCubeButton)
+        {
+            for (int i = 0; i < 100; i++)
+            {
+                testTree->DeleteCube((double)rand()*2.0 / (double)RAND_MAX - 1.0, (double)rand()*2.0 / (double)RAND_MAX - 1.0, (double)rand()*2.0 / (double)RAND_MAX - 1.0);
+            }
+        }
+
+        // Update the FPS display timer
+        if (glfwGetTime() - lastDisplayTime > 1)
+        {
+            std::cout << "FPS: " << frameCounter/(glfwGetTime() - lastDisplayTime) << ", " << vertexCount / 36 << " cubes." << std::endl;
+            lastDisplayTime = glfwGetTime();
+            frameCounter = 0;
+        }
+
         // Update timer and try to sleep for the FPS Target.
-        timeDelta = (double)glfwGetTime() - lastTime;
+       /* timeDelta = (double)glfwGetTime() - lastTime;
         lastTime  = (double)glfwGetTime();
 
-        std::chrono::milliseconds sleepTime ((int)(1.0/(double)GLManager::FPS_TARGET - 1000*timeDelta));
+        std::chrono::milliseconds sleepTime ((int)(1000/(double)GLManager::FPS_TARGET - 1000*timeDelta));
         if (sleepTime > std::chrono::milliseconds(0))
         {
             std::this_thread::sleep_for(sleepTime);
-        }
+        }*/
+        ++frameCounter;
     }
 
     return true;
