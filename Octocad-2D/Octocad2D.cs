@@ -16,7 +16,9 @@ namespace Octocad_2D
         Bitmap drawingBitmap;
         SolidBrush backgroundBrush = new SolidBrush(Color.White);
 
-        private Toolbox toolbox;
+        private static Toolbox toolbox;
+        private static Preferences preferences;
+        private static DrawingBoard drawingBoard;
 
         // If the file has been saved since an edit
         private bool hasSaved;
@@ -24,33 +26,27 @@ namespace Octocad_2D
         // If the file hasn't been edited, ever.
         private bool isNew;
 
-        private int EWidth
-        {
-            get
-            {
-                return ClientSize.Width;
-            }
-        }
+        public static int EWidth;
+        public static int EHeight;
 
-        private int EHeight
-        {
-            get
-            {
-                return ClientSize.Height - topMenuStrip.Height;
-            }
-        }
+        private bool convertToDrag = false;
 
         public Octocad2D()
         {
             InitializeComponent();
+            MouseWheel += Octocad2D_MouseWheel;
+
             toolbox = new Toolbox();
             toolbox.Show();
+
+            preferences = new Preferences();
+            drawingBoard = new DrawingBoard();
 
             hasSaved = false;
             isNew = true;
             saveAsToolStripMenuItem.Enabled = false;
 
-            RecreateBitmap();
+            Octocad2D_Resize(null, null);
         }
 
         /// <summary>
@@ -78,15 +74,12 @@ namespace Octocad_2D
 
         private void DrawDrawingArea(Graphics g)
         {
+            // Clear the screen
             Graphics gg = Graphics.FromImage(drawingBitmap);
             gg.FillRectangle(backgroundBrush, 0, 0, EWidth, EHeight);
 
-           // HatchBrush hb = new HatchBrush(HatchStyle.SmallGrid, Color.LightBlue);
-          //  gg.FillRectangle(hb, 0, 0, EWidth, EHeight);
-
-            Pen blackPen = new Pen(Color.Black, 1);
-            gg.DrawLine(blackPen, 0, 0, EWidth, EHeight);
-            gg.DrawLine(blackPen, 0, EHeight, EWidth, 0);
+            // Draw the current active items
+            drawingBoard.Draw(gg);
 
             // Copy the bitmap onto the drawing screen.
             g.DrawImage(drawingBitmap, 0, topMenuStrip.Height);
@@ -95,6 +88,8 @@ namespace Octocad_2D
 
         private void Octocad2D_Resize(object sender, EventArgs e)
         {
+            EWidth = ClientSize.Width;
+            EHeight = ClientSize.Height - topMenuStrip.Height;
             RecreateBitmap();
         }
 
@@ -139,19 +134,35 @@ namespace Octocad_2D
 
         private void preferencesToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
+            preferences.Show();
+            // TODO perform actions based on updates from preferences.
         }
 
+        /// <summary>
+        /// Shows the help pane.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void helpToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-
+            new Help().Show();
         }
 
+        /// <summary>
+        /// Shows the about pane.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
+            new About().Show();
         }
 
+        /// <summary>
+        /// Closes the form after first verifying that the user understands the condition of the save.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Octocad2D_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (!hasSaved && !isNew)
@@ -169,6 +180,72 @@ namespace Octocad_2D
                 {
                     e.Cancel = true; // Don't exit at all.
                 }
+            }
+        }
+
+        private void Octocad2D_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (convertToDrag)
+            {
+                drawingBoard.HandleMouseDrag(e.X, e.Y - topMenuStrip.Height);
+            }
+            else
+            {
+                drawingBoard.HandleMouseMotion(e.X, e.Y - topMenuStrip.Height);
+            }
+            this.Invalidate(true);
+        }
+
+        void Octocad2D_MouseWheel(object sender, MouseEventArgs e)
+        {
+            drawingBoard.HandleMouseScroll(e.Delta);
+            this.Invalidate(true);
+        }
+
+        private void Octocad2D_MouseDown(object sender, MouseEventArgs e)
+        {
+            switch (e.Button)
+            {
+                case MouseButtons.Left:
+                    convertToDrag = true;
+                    drawingBoard.LeftDown();
+                    break;
+                case MouseButtons.Right:
+                    drawingBoard.RightDown();
+                    break;
+                default:
+                    break;
+            }
+            this.Invalidate(true);
+        }
+
+        private void Octocad2D_MouseUp(object sender, MouseEventArgs e)
+        {
+            switch (e.Button)
+            {
+                case MouseButtons.Left:
+                    convertToDrag = false;
+                    drawingBoard.LeftUp();
+                    break;
+                case MouseButtons.Right:
+                    drawingBoard.RightUp();
+                    break;
+                default:
+                    break;
+            }
+            this.Invalidate(true);
+        }
+
+        private void Octocad2D_KeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.Escape:
+                    drawingBoard.HandleEscape();
+                    this.Invalidate(true);
+                    break;
+                default:
+                    break;
             }
         }
     }

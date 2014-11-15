@@ -50,7 +50,7 @@
             this.helpToolStripMenuItem});
             this.topMenuStrip.Location = new System.Drawing.Point(0, 0);
             this.topMenuStrip.Name = "topMenuStrip";
-            this.topMenuStrip.Size = new System.Drawing.Size(304, 24);
+            this.topMenuStrip.Size = new System.Drawing.Size(684, 24);
             this.topMenuStrip.TabIndex = 0;
             this.topMenuStrip.Text = "menuStrip1";
             // 
@@ -68,28 +68,28 @@
             // loadToolStripMenuItem
             // 
             this.loadToolStripMenuItem.Name = "loadToolStripMenuItem";
-            this.loadToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.loadToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
             this.loadToolStripMenuItem.Text = "Load";
             this.loadToolStripMenuItem.Click += new System.EventHandler(this.loadToolStripMenuItem_Click);
             // 
             // saveToolStripMenuItem
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
             this.saveToolStripMenuItem.Text = "Save";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
             // 
             // saveAsToolStripMenuItem
             // 
             this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
-            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
             this.saveAsToolStripMenuItem.Text = "Save As...";
             this.saveAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsToolStripMenuItem_Click);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -104,7 +104,7 @@
             // preferencesToolStripMenuItem
             // 
             this.preferencesToolStripMenuItem.Name = "preferencesToolStripMenuItem";
-            this.preferencesToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.preferencesToolStripMenuItem.Size = new System.Drawing.Size(135, 22);
             this.preferencesToolStripMenuItem.Text = "Preferences";
             this.preferencesToolStripMenuItem.Click += new System.EventHandler(this.preferencesToolStripMenuItem_Click);
             // 
@@ -120,14 +120,14 @@
             // helpToolStripMenuItem1
             // 
             this.helpToolStripMenuItem1.Name = "helpToolStripMenuItem1";
-            this.helpToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
+            this.helpToolStripMenuItem1.Size = new System.Drawing.Size(107, 22);
             this.helpToolStripMenuItem1.Text = "Help";
             this.helpToolStripMenuItem1.Click += new System.EventHandler(this.helpToolStripMenuItem1_Click);
             // 
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
@@ -135,15 +135,21 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(304, 201);
+            this.ClientSize = new System.Drawing.Size(684, 611);
             this.Controls.Add(this.topMenuStrip);
             this.DoubleBuffered = true;
+            this.Location = new System.Drawing.Point(10, 10);
             this.MainMenuStrip = this.topMenuStrip;
             this.MinimumSize = new System.Drawing.Size(320, 240);
             this.Name = "Octocad2D";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             this.Text = "Octocad 2D";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Octocad2D_FormClosing);
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.Octocad2D_Paint);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Octocad2D_KeyDown);
+            this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Octocad2D_MouseDown);
+            this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.Octocad2D_MouseMove);
+            this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.Octocad2D_MouseUp);
             this.Resize += new System.EventHandler(this.Octocad2D_Resize);
             this.topMenuStrip.ResumeLayout(false);
             this.topMenuStrip.PerformLayout();
