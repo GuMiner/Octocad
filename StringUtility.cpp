@@ -18,7 +18,7 @@ void StringUtility::Split(const std::string& stringToSplit, char delimator, bool
 }
 
 // Loads a file as a really big string; returns true on success.
-bool StringUtility::LoadString(const std::string& filename, std::string& result)
+bool StringUtility::LoadStringFromFile(const std::string& filename, std::string& result)
 {
     std::ifstream file (filename.c_str());
     if (!file) 

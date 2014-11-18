@@ -16,12 +16,16 @@ namespace Octocad_2D
         public static EditMode editMode;
         public static bool isSnapToGrid, isSnapEndpoints;
 
-        public Toolbox()
+        private DrawingBoard drawingBoard;
+
+        public Toolbox(DrawingBoard board)
         {
             InitializeComponent();
             editMode = EditMode.SELECT;
             isSnapToGrid = true;
             isSnapEndpoints = true;
+
+            drawingBoard = board;
         }
 
         private void snapToGrid_CheckedChanged(object sender, EventArgs e)
@@ -56,7 +60,7 @@ namespace Octocad_2D
 
         private void extrudeButton_Click(object sender, EventArgs e)
         {
-            // TODO begin extrude process
+            drawingBoard.ExtrudeDrawing();
         }
 
         private void revolveButton_Click(object sender, EventArgs e)

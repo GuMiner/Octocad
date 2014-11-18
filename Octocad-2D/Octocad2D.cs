@@ -20,6 +20,8 @@ namespace Octocad_2D
         private static Preferences preferences;
         private static DrawingBoard drawingBoard;
 
+        private ProcessLink processLink;
+
         // If the file has been saved since an edit
         private bool hasSaved;
 
@@ -36,11 +38,13 @@ namespace Octocad_2D
             InitializeComponent();
             MouseWheel += Octocad2D_MouseWheel;
 
-            toolbox = new Toolbox();
-            toolbox.Show();
-
             preferences = new Preferences();
             drawingBoard = new DrawingBoard();
+
+            toolbox = new Toolbox(drawingBoard);
+            toolbox.Show();
+            
+            processLink = new ProcessLink();
 
             hasSaved = false;
             isNew = true;

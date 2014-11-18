@@ -2,23 +2,31 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace Octocad_2D
 {
     /// <summary>
     /// Defines a drawing board that the lines, shapes, etc are drawn on.
     /// </summary>
-    class DrawingBoard
+    public class DrawingBoard
     {
         private List<Primitive> primitives;
         private List<Knot> knots;
+        private List<CalculatedEndpoint> calculatedEndpoints;
+
         private Line creationLine;
         private Arc creationArc;
         private int creationStage;
+        private Knot creationKnotPrimary, creationKnotSecondary; // At start of object creation and at end of object creation.
+        private int creationKnotIdxPrimary, creationKnotIdxSecondary;
         private bool incrementedStage;
+        private bool isSnappedToEndpoint;
+        private bool isSnappedToPrimitive;
+        private int snapIdx, primitiveIdx;
 
         SolidBrush drawBackgroundBrush;
-        Pen gridPen, stencilPen, activePen; // Should be in increasing orders of darkness
+        Pen gridPen, stencilPen, specialPen, activePen; // Should be in increasing orders of darkness
 
         /// <summary>
         /// The actual size of the drawing board
@@ -39,15 +47,26 @@ namespace Octocad_2D
         public DrawingBoard()
         {
             primitives = new List<Primitive>();
+            knots = new List<Knot>();
+            calculatedEndpoints = new List<CalculatedEndpoint>();
+
             creationLine = null;
             creationArc = null;
-
+            creationKnotPrimary = null;
+            creationKnotSecondary = null;
+            creationKnotIdxPrimary = -1;
+            creationKnotIdxSecondary = -1;
             creationStage = 0;
             incrementedStage = false;
+            isSnappedToEndpoint = false;
+            isSnappedToPrimitive = false;
+            snapIdx = -1;
+            primitiveIdx = -1;
 
             drawBackgroundBrush = new SolidBrush(Color.Cornsilk);
             gridPen = new Pen(Color.LightGray, 1);
             stencilPen = new Pen(Color.DarkGray, 2);
+            specialPen = new Pen(Color.DarkOrange, 2);
             activePen = new Pen(Color.DarkGreen, 2);
 
             UpdateFromPreferences();
@@ -121,6 +140,7 @@ namespace Octocad_2D
                 {
                     creationLine.x2 = mouseX;
                     creationLine.y2 = mouseY;
+                    creationLine.UpdatePrimitive();
                 }
             }
             else if (Toolbox.editMode == Toolbox.EditMode.ARC)
@@ -138,6 +158,7 @@ namespace Octocad_2D
                         {
                             creationArc.thetaOne += 2 * Math.PI;
                         }
+                        creationArc.UpdatePrimitive();
                     }
                     else
                     {
@@ -149,6 +170,17 @@ namespace Octocad_2D
                         {
                             creationArc.thetaTwo += 2 * Math.PI;
                         }
+                        if (creationArc.thetaTwo < creationArc.thetaOne)
+                        {
+                            creationArc.thetaTwo += 2 * Math.PI;
+                        }
+
+                        // Allow for full circles
+                        if (Math.Abs(creationArc.thetaTwo - (creationArc.thetaOne + 2*Math.PI)) < Arc.UNIFIED_ARC)
+                        {
+                            creationArc.thetaTwo = creationArc.thetaOne + 2 * Math.PI;
+                        }
+                        creationArc.UpdatePrimitive();
                     }
                 }
             }
@@ -181,6 +213,43 @@ namespace Octocad_2D
             // Takes precedent over grid snapping, so calculated after a potential grid snap.
             if (Toolbox.isSnapEndpoints)
             {
+                isSnappedToEndpoint = false;
+                isSnappedToPrimitive = false;
+
+                // Actual endpoints take precedence over calculated endpoints
+                for (int i = 0; i < calculatedEndpoints.Count; i++)
+                {
+                    if (Utility.VisualDistance(calculatedEndpoints[i].endpointPoint, x, y) < Preferences.GetScreenErrorResolution())
+                    {
+                        mouseX = calculatedEndpoints[i].endpointPoint.X;
+                        mouseY = calculatedEndpoints[i].endpointPoint.Y;
+                        isSnappedToEndpoint = true;
+                        snapIdx = i;
+                        break;
+                    }
+                }
+
+                for (int i = 0; i < primitives.Count; i++)
+                {
+                    for (int j = 0; j < primitives[i].GetEndpoints().Count; j++)
+                    {
+                        PointF endpoint = primitives[i].GetEndpoints()[j];
+                        if (Utility.VisualDistance(endpoint, x, y) < Preferences.GetScreenErrorResolution())
+                        {
+                            mouseX = endpoint.X;
+                            mouseY = endpoint.Y;
+                            isSnappedToPrimitive = true;
+                            snapIdx = j;
+                            primitiveIdx = i;
+                            break;
+                        }
+                    }
+
+                    if (isSnappedToPrimitive)
+                    {
+                        break;
+                    }
+                }
             }
 
             // Update mouse motion delta
@@ -223,12 +292,47 @@ namespace Octocad_2D
             switch(Toolbox.editMode)
             {
                 case Toolbox.EditMode.LINE:
-                    creationLine = new Line() { x1 = mouseX, y1 = mouseY };
+                    creationLine = new Line() { x1 = mouseX, y1 = mouseY , x2 = mouseX, y2 = mouseY };
                     break;
                 case Toolbox.EditMode.ARC:
-                    creationArc = new Arc() { xc = mouseX, yc = mouseY };
+                    creationArc = new Arc() { xc = mouseX, yc = mouseY, radius = 0, thetaOne = 0, thetaTwo = 0 };
                     creationStage = 0;
                     incrementedStage = false;
+                    break;
+                default:
+                    break;
+            }
+
+            if (isSnappedToEndpoint)
+            {
+                //int snappedKnot = FindSnappedKnotByIntersection(
+            }
+
+            if (isSnappedToPrimitive)
+            {
+                // TODO
+            }
+        }
+
+        public void LeftUp()
+        {
+            switch (Toolbox.editMode)
+            {
+                case Toolbox.EditMode.LINE:
+                    if (creationLine != null)
+                    {
+                        primitives.Add(creationLine);
+                        creationLine = null;
+                        GenerateCalculatedEndpoints();
+                    }
+                    break;
+                case Toolbox.EditMode.ARC:
+                    if (creationArc != null)
+                    {
+                        primitives.Add(creationArc);
+                        creationArc = null;
+                        GenerateCalculatedEndpoints();
+                    }
                     break;
                 default:
                     break;
@@ -250,29 +354,6 @@ namespace Octocad_2D
         public void RightUp()
         {
             incrementedStage = false;
-        }
-
-        public void LeftUp()
-        {
-            switch (Toolbox.editMode)
-            {
-                case Toolbox.EditMode.LINE:
-                    if (creationLine != null)
-                    {
-                        primitives.Add(creationLine);
-                        creationLine = null;
-                    }
-                    break;
-                case Toolbox.EditMode.ARC:
-                    if (creationArc != null)
-                    {
-                        primitives.Add(creationArc);
-                        creationArc = null;
-                    }
-                    break;
-                default:
-                    break;
-            }
         }
 
         /// <summary>
@@ -299,6 +380,204 @@ namespace Octocad_2D
             {
                 y = Octocad2D.EHeight;
             }
+        }
+
+        public void GenerateCalculatedEndpoints()
+        {
+            calculatedEndpoints = new List<CalculatedEndpoint>();
+            for (int i = 0; i < primitives.Count; i++)
+            {
+                for (int j = i; j < primitives.Count; j++)
+                {
+                    // Determine where this primitive intersects the other primitive -- if there is an intersection, add that to the calculated endpoint list.
+                    List<PointF> intersections = Utility.GetPrimitiveIntersections(primitives[i], primitives[j]);
+                    foreach (PointF point in intersections)
+                    {
+                        calculatedEndpoints.Add(new CalculatedEndpoint() { endpointPoint = point, firstPrimitive = i, secondPrimitive = j });
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Starts the extrude process. In this process, the user selects what is to be extruded.
+        /// </summary>
+        public void ExtrudeDrawing()
+        {
+            // Step 1: Normalize lines to all terminate on intersection or normal endpoints.
+
+            // Step 2: Draw onto a life-sized bitmap.
+            Bitmap flatMapping = new Bitmap((int)(Preferences.length/Preferences.resolution), (int)(Preferences.height/Preferences.resolution), PixelFormat.Format1bppIndexed);
+            DrawForConversion(ref flatMapping);
+
+            // Step 3: Show to user, let user select segments for extrusion / revolve point.
+            BitSelectionPane bsp = new BitSelectionPane(ref flatMapping);
+            bsp.ShowDialog(); // Hold until the user hits cancel or ok
+            if (bsp.okToProceed)
+            {
+
+            }
+
+            // Step 4: Send filled-out bitmap to Octocad C++ for extrusion / revolving.
+        }
+
+        /// <summary>
+        /// Draws the bit image of all the items to form the potential extrusion/rotate map.
+        /// </summary>
+        /// <param name="bitImage"></param>
+        public void DrawForConversion(ref Bitmap bitImage)
+        {
+            BitmapData bitmapData = bitImage.LockBits(new Rectangle(0, 0, bitImage.Width, bitImage.Height), ImageLockMode.ReadWrite, bitImage.PixelFormat);
+
+            // Clear the background
+            for (int y = 0; y < bitmapData.Height; y++)
+            {
+                for (int x = 0; x < bitmapData.Width; x++)
+                {
+                    ClearPixel(x, y, ref bitmapData);
+                }
+            }
+
+            // Draw the primitives
+            foreach (Primitive primitive in primitives)
+            {
+                primitive.DrawForExport(ref bitmapData);
+            }
+
+            bitImage.UnlockBits(bitmapData);
+
+            bitImage.Save("C:\\users\\gustave\\desktop\\result.png");
+        }
+
+        /// <summary>
+        /// Verifies the point is within the pixel bitmap.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="bitmapData"></param>
+        /// <returns></returns>
+        public static bool VerifyBounds(int x, int y, ref BitmapData bitmapData)
+        {
+            return (x >= 0 && y >= 0 && x < bitmapData.Width && y < bitmapData.Height);
+        }
+
+        /// <summary>
+        /// Clears the pixel at the provided location.
+        /// This actually sets the bit (which is clear).
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="bitmapData"></param>
+        public static void ClearPixel(int x, int y, ref BitmapData bitmapData)
+        {
+            unsafe
+            {
+                byte* row = (byte*)bitmapData.Scan0 + (y * bitmapData.Stride) + (x / 8);
+                switch (x % 8)
+                {
+                    case 0:
+                        *row = (byte)(*row | 0x80);
+                        break;
+                    case 1:
+                        *row = (byte)(*row | 0x40);
+                        break;
+                    case 2:
+                        *row = (byte)(*row | 0x20);
+                        break;
+                    case 3:
+                        *row = (byte)(*row | 0x10);
+                        break;
+                    case 4:
+                        *row = (byte)(*row | 0x08);
+                        break;
+                    case 5:
+                        *row = (byte)(*row | 0x04);
+                        break;
+                    case 6:
+                        *row = (byte)(*row | 0x02);
+                        break;
+                    case 7:
+                        *row = (byte)(*row | 0x01);
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sets the pixel at the specified location, in an unsafe manner.
+        /// This actually clears the bit (which is solid).
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="bitmapData"></param>
+        public static void SetPixel(int x, int y, ref BitmapData bitmapData)
+        {
+            unsafe
+            {
+                byte* row = (byte*)bitmapData.Scan0 + (y * bitmapData.Stride) + (x / 8);
+                switch (x % 8)
+                {
+                    case 0:
+                        *row = (byte)(*row & 0x7F);
+                        break;
+                    case 1:
+                        *row = (byte)(*row & 0xBF);
+                        break;
+                    case 2:
+                        *row = (byte)(*row & 0xDF);
+                        break;
+                    case 3:
+                        *row = (byte)(*row & 0xEF);
+                        break;
+                    case 4:
+                        *row = (byte)(*row & 0xF7);
+                        break;
+                    case 5:
+                        *row = (byte)(*row & 0xFB);
+                        break;
+                    case 6:
+                        *row = (byte)(*row & 0xFD);
+                        break;
+                    case 7:
+                        *row = (byte)(*row & 0xFE);
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checks if the given pixel on the image is set or not.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="bitmapData"></param>
+        /// <returns>True if set, false otherwise</returns>
+        public static bool CheckPixel(int x, int y, ref BitmapData bitmapData)
+        {
+            unsafe
+            {
+                byte* row = (byte*)bitmapData.Scan0 + (y * bitmapData.Stride) + (x / 8);
+                switch (x % 8)
+                {
+                    case 0:
+                        return (byte)(*row & 0x80) == 0;
+                    case 1:
+                        return (byte)(*row & 0x40) == 0;
+                    case 2:
+                        return (byte)(*row & 0x20) == 0;
+                    case 3:
+                        return (byte)(*row & 0x10) == 0;
+                    case 4:
+                        return (byte)(*row & 0x08) == 0;
+                    case 5:
+                        return (byte)(*row & 0x04) == 0;
+                    case 6:
+                        return (byte)(*row & 0x02) == 0;
+                    case 7:
+                        return (byte)(*row & 0x01) == 0;
+                }
+            }
+            return true;
         }
 
         public void Draw(Graphics g)
@@ -345,6 +624,14 @@ namespace Octocad_2D
             foreach (Primitive primitive in primitives)
             {
                 primitive.Draw(g, stencilPen);
+            }
+
+            // Draw the calculated endpoints
+            foreach (CalculatedEndpoint endpoint in calculatedEndpoints)
+            {
+                double eX, eY;
+                DrawingBoard.MapToScreen(endpoint.endpointPoint.X, endpoint.endpointPoint.Y, out eX, out eY);
+                g.DrawRectangle(specialPen, (float)eX - 2, (float)eY - 2, 4, 4);
             }
 
             // Draw the line being created

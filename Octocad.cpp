@@ -16,7 +16,7 @@
 
 const char* Octocad::NAME = "Octocad v1.0";
 
-Octocad::Octocad(void)
+Octocad::Octocad(void) : processLink()
 {
 }
 
@@ -132,21 +132,13 @@ bool Octocad::ApplicationSetup()
     // -----------------------------------
     //   Non Open GL portions
     // -----------------------------------
-    double smallScale = 0.008;
-    testTree = new Octree(2, smallScale, false); // Small fudge factor so that we have exactly four boxes, regardless of operation.
-    /*for (double i = -1; i < 1; i += smallScale/2)
-    {
-        for (double j = -1; j < 1; j += smallScale/2)
-        {
-            for (double k = -1; k < 1; k += smallScale/2)
-            {
-                if ((int)(i*1000) % 20 == 0 || (int)(j*1000) % 20 == 0 || (int)(k*1000) % 20 == 0)
-                {
-                    testTree->AddCube(i, j, k);
-                }
-            }
-        }
-    }*/
+    
+    // Setup the default octree
+    double smallScale = 0.01;
+    testTree = new Octree(2, smallScale, false);
+
+    // Setup communication with our C# partner
+
 
     // -----------------------------------
 
@@ -166,7 +158,6 @@ Octocad::~Octocad()
     // Close down GLFW
     glfwDestroyWindow(pWindow);
     glfwTerminate();
-
 }
 
 // Sets up the drawing viewport so we don't get a weird squished display.
@@ -181,13 +172,7 @@ void Octocad::SetupViewport()
 
 void Octocad::Render(double currentTime)
 {
-        colorVertex *pVertices = testTree->Triangulate(vertexCount);
-
-    // Skip rendering if there's nothing to render.
-    if (vertexCount == 0)
-    {
-       // return;
-    }
+    colorVertex *pVertices = testTree->Triangulate(vertexCount);
 
     glBufferData(GL_ARRAY_BUFFER, vertexCount*sizeof(colorVertex), pVertices, GL_STATIC_DRAW);
 
@@ -219,15 +204,14 @@ void Octocad::Render(double currentTime)
     }
 }
 
-bool Octocad::RunApplication()                                                              
+bool Octocad::RunApplication()
 {
-   // double timeDelta = 1.0/(double)GLManager::FPS_TARGET;
-  //  double lastTime = (double)glfwGetTime();
+    double timeDelta = 1.0/(double)GLManager::FPS_TARGET;
+    double lastTime = glfwGetTime();
 
-        // Load up what's in the octree for display
+    // Load up what's in the octree for display
 
-
-    double lastDisplayTime = glfwGetTime();//lastTime;
+    double lastDisplayTime = lastTime;
     long frameCounter = 0;
 
     while (GLManager::GetManager()->running)
@@ -239,7 +223,6 @@ bool Octocad::RunApplication()
         // Handle events.
         glfwPollEvents();
         
-        //------------------
         // Escape event
         if (glfwGetKey(pWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS || glfwWindowShouldClose(pWindow))
         {
@@ -251,45 +234,15 @@ bool Octocad::RunApplication()
         {
             SetupViewport();
         }
-        //------------------
 
         char typedKey;
         if (InputSystem::KeyTypedEvent(typedKey))
         {
             switch(typedKey)
             {
-            case 'a': 
-                testTree->AddCube((double)rand()*2.0 / (double)RAND_MAX - 1.0, (double)rand()*2.0 / (double)RAND_MAX - 1.0, (double)rand()*2.0 / (double)RAND_MAX - 1.0);
-                std::cout << "+ Cube" << std::endl;
-                break;
-            case 'r':
-                testTree->DeleteCube((double)rand()*2.0 / (double)RAND_MAX - 1.0, (double)rand()*2.0 / (double)RAND_MAX - 1.0, (double)rand()*2.0 / (double)RAND_MAX - 1.0);
-                std::cout << "- Cube" << std::endl;
-                break;
-            case 'n':
-                testTree = new Octree(2, 0.26, true); // Small fudge factor so that we have exactly four boxes, regardless of operation.
-                break;
-            case 'e':
-                testTree = new Octree(2, 0.51, false); // Small fudge factor so that we have exactly four boxes, regardless of operation.
-                break;
             default:
                 std::cout << "What?" << std::endl;
                 break;
-            }
-        }
-
-        if (InputSystem::addCubeButton)
-        {
-            for (int i = 0; i < 100; i++)
-            {
-                testTree->AddCube((double)rand()*2.0 / (double)RAND_MAX - 1.0, (double)rand()*2.0 / (double)RAND_MAX - 1.0, (double)rand()*2.0 / (double)RAND_MAX - 1.0);
-            }
-        }
-        if (InputSystem::removeCubeButton)
-        {
-            for (int i = 0; i < 100; i++)
-            {
-                testTree->DeleteCube((double)rand()*2.0 / (double)RAND_MAX - 1.0, (double)rand()*2.0 / (double)RAND_MAX - 1.0, (double)rand()*2.0 / (double)RAND_MAX - 1.0);
             }
         }
 
@@ -302,14 +255,14 @@ bool Octocad::RunApplication()
         }
 
         // Update timer and try to sleep for the FPS Target.
-       /* timeDelta = (double)glfwGetTime() - lastTime;
+        timeDelta = (double)glfwGetTime() - lastTime;
         lastTime  = (double)glfwGetTime();
 
         std::chrono::milliseconds sleepTime ((int)(1000/(double)GLManager::FPS_TARGET - 1000*timeDelta));
         if (sleepTime > std::chrono::milliseconds(0))
         {
             std::this_thread::sleep_for(sleepTime);
-        }*/
+        }
         ++frameCounter;
     }
 
@@ -326,7 +279,7 @@ int main(int argc, char* argv [])
         runStatus = Octocad->ApplicationSetup();
         if (!runStatus)
         {
-            std::cout << std::endl << "Error initializing Rcsg-edit!" << std::endl;
+            std::cout << std::endl << "Error initializing OctocadCpp!" << std::endl;
             break;
         }
         runStatus = Octocad->RunApplication();
@@ -334,7 +287,7 @@ int main(int argc, char* argv [])
 
     // Wait before closing for display purposes.
     std::cout << std::endl << "End of application. " << std::endl;
-    std::chrono::milliseconds sleepTime(3000);
+    std::chrono::milliseconds sleepTime(2000);
     std::this_thread::sleep_for(sleepTime);
 
     return runStatus;

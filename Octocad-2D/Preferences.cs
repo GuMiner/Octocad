@@ -21,6 +21,16 @@ namespace Octocad_2D
             resetButton_Click(null, null);
         }
 
+        public static double GetErrorResolution()
+        {
+            return resolution / 10; // In board coordinates
+        }
+
+        public static double GetScreenErrorResolution()
+        {
+            return 10; // In pixels
+        }
+
         private void RefreshUI()
         {
             lengthBox.Text = String.Format("{0}", length);

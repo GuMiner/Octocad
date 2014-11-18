@@ -25,6 +25,10 @@
 #include <limits>
 #include <memory>
 
+// Named pipe access -- and the rest of windows
+#define WIN32_LEAN_AND_MEAN 1
+#include <Windows.h>
+
 // GLEW library
 #include <GL/glew.h>
 

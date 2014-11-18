@@ -10,5 +10,5 @@ public:
     static void Split(const std::string& stringToSplit, char delimator, bool excludeEmpty, std::vector<std::string>& splitStrings);
 
     // Loads a file as a really big string; returns true on success.
-    static bool LoadString(const std::string& filename, std::string& result);
+    static bool LoadStringFromFile(const std::string& filename, std::string& result);
 };

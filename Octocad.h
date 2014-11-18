@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Octree.h"
+#include "ProcessLink.h"
 
 class Octocad
 {
@@ -22,6 +23,8 @@ class Octocad
 
     // Test Octree
     Octree *testTree;
+
+    ProcessLink processLink;
 
     void SetupViewport();
     bool WindowInitialization();

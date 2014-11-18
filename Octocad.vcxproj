@@ -73,6 +73,7 @@
     <ClInclude Include="InputSystem.h" />
     <ClInclude Include="Octocad.h" />
     <ClInclude Include="Octree.h" />
+    <ClInclude Include="ProcessLink.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="StringUtility.h" />
     <ClInclude Include="Vertex.h" />
@@ -83,6 +84,7 @@
     <ClCompile Include="InputSystem.cpp" />
     <ClCompile Include="Octocad.cpp" />
     <ClCompile Include="Octree.cpp" />
+    <ClCompile Include="ProcessLink.cpp" />
     <ClCompile Include="StringUtility.cpp" />
     <ClCompile Include="Vertex.cpp" />
   </ItemGroup>

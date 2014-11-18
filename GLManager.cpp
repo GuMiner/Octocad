@@ -19,12 +19,12 @@ GLuint GLManager::CompileShaderProgram(const char rootName [])
     vsFilenameStream << "shaders/" << rootName << ".vs";
     fsFilenameStream << "shaders/" << rootName << ".fs";
 
-    if (!StringUtility::LoadString(vsFilenameStream.str().c_str(), vsShader))
+    if (!StringUtility::LoadStringFromFile(vsFilenameStream.str().c_str(), vsShader))
     {
         std::cout << "Could not load " << vsShader << "!" << std::endl;
     }
 
-    if (!StringUtility::LoadString(fsFilenameStream.str().c_str(), fsShader))
+    if (!StringUtility::LoadStringFromFile(fsFilenameStream.str().c_str(), fsShader))
     {
         std::cout << "Could not load fragment shader" << fsShader << "!" << std::endl;
     }

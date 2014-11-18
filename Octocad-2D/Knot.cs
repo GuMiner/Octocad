@@ -10,6 +10,27 @@ namespace Octocad_2D
     /// </summary>
     class Knot
     {
-        // TODO
+        public List<int> primitiveIndexes;
+        public List<int?> endpointIndexes;
+
+        /// <summary>
+        /// Whether the endpoint this not is associated with is an intersection. The 
+        /// primitives with null indexes are those forming the intersection.
+        /// </summary>
+        public bool isIntersectionKnot;
+        
+        /// <summary>
+        /// Whether or not these endpoints are stuck at their current location.
+        /// </summary>
+        public bool locked;
+
+        public Knot()
+        {
+            primitiveIndexes = new List<int>();
+            endpointIndexes = new List<int?>();
+            locked = false;
+            isIntersectionKnot = false;
+
+        }
     }
 }
