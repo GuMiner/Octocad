@@ -12,7 +12,7 @@ namespace Octocad_2D
 {
     partial class Preferences : Form
     {
-        public static double length, width, height, resolution;
+        public static double length, resolution;
         public static String units;
 
         private ProcessLink cppLink;
@@ -38,8 +38,6 @@ namespace Octocad_2D
         private void RefreshUI()
         {
             lengthBox.Text = String.Format("{0}", length);
-            widthBox.Text = String.Format("{0}", width);
-            heightBox.Text = String.Format("{0}", height);
             resolutionBox.Text = String.Format("{0}", resolution);
             for (int i = 0; i < unitComboBox.Items.Count; i++)
             {
@@ -59,8 +57,6 @@ namespace Octocad_2D
         private void unitComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             unitBox1.Text = unitComboBox.SelectedItem.ToString();
-            unitBox2.Text = unitBox1.Text;
-            unitBox3.Text = unitBox1.Text;
             unitBox4.Text = unitBox1.Text;
         }
 
@@ -69,7 +65,7 @@ namespace Octocad_2D
             this.Hide();
 
             // TODO pass in units separately
-            cppLink.WriteToOctocadCpp(MessageHandler.TranslateMessage(MessageHandler.MessageType.PREFERENCES_UPDATE, length, width, height, resolution));
+            cppLink.WriteToOctocadCpp(MessageHandler.TranslateMessage(MessageHandler.MessageType.PREFERENCES_UPDATE, length, resolution));
         }
 
         /// <summary>
@@ -80,8 +76,6 @@ namespace Octocad_2D
         private void resetButton_Click(object sender, EventArgs e)
         {
             length = 120.0;
-            width = 100.0;
-            height = 80.0;
             resolution = 0.1;
             units = "mm";
 

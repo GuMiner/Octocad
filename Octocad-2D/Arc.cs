@@ -48,7 +48,7 @@ namespace Octocad_2D
             for (double i = 0; i < steps; i++)
             {
                 double x_n = (Math.Cos((i / steps) * (thetaTwo - thetaOne) + thetaOne) * radius + xc + Preferences.length / 2) / Preferences.resolution;
-                double y_n = (Math.Sin((i / steps) * (thetaTwo - thetaOne) + thetaOne) * radius + yc + Preferences.width / 2) / Preferences.resolution;
+                double y_n = (Math.Sin((i / steps) * (thetaTwo - thetaOne) + thetaOne) * radius + yc + Preferences.length / 2) / Preferences.resolution;
                 if (DrawingBoard.VerifyBounds((int)x_n, (int)y_n, ref bitmapData))
                 {
                     DrawingBoard.SetPixel((int)x_n, (int)y_n, ref bitmapData);

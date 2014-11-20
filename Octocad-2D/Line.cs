@@ -33,7 +33,7 @@ namespace Octocad_2D
 
             // Drawing the line in a parametric manner.
             double x_s = x1 + Preferences.length/2;
-            double y_s = y1 + Preferences.width/2;
+            double y_s = y1 + Preferences.length/2;
             for (double i = 0; i < steps; i++)
             {
                 double x_n = ((i/steps)*(x2 - x1) + x_s)/Preferences.resolution;

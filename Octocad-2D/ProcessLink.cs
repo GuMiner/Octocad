@@ -33,7 +33,7 @@ namespace Octocad_2D
             pipeThread = new Thread(CreatePipeServer);
             pipeThread.Start();
 
-            // Start up the C++ program. TODO this should really be gated on waiting until the server is up.
+            // Start up the C++ program. This comes with a slight delay to avoid the named pipe race communication connection issue.
             octocadCpp = new Process();
             octocadCpp.StartInfo = new ProcessStartInfo()
             {
@@ -43,6 +43,17 @@ namespace Octocad_2D
             };
             Console.WriteLine(octocadCpp.StartInfo.WorkingDirectory);
             octocadCpp.Start();
+        }
+
+        /// <summary>
+        /// Halts the interprocess link (cleanly). The steps involved are:
+        /// 1. Send the C++ message. The C++ executable joins to the read thread (and the finished startup thread) and waits to exit.
+        /// 2. Join our reading thread, which will quit when the client closes the connection.
+        /// </summary>
+        public void HaltCommunication()
+        {
+            WriteToOctocadCpp(MessageHandler.TranslateMessage(MessageHandler.MessageType.EXIT_MESSAGE));
+            readThread.Join();
         }
 
         ~ProcessLink()
@@ -83,11 +94,11 @@ namespace Octocad_2D
         private void ReadFromOctocadCpp()
         {
             byte[] inputBuffer = new byte[BUFFER_SIZE];
+            int readCount = 1;
 
-            while (true)
+            while (readCount > 0)
             {
-                Console.WriteLine("Reading bytes from the stream...");
-                int readCount = inputCommunicationStream.Read(inputBuffer, 0, BUFFER_SIZE);
+                readCount = inputCommunicationStream.Read(inputBuffer, 0, BUFFER_SIZE);
                 if (readCount > 0)
                 {
                     Console.WriteLine((char)inputBuffer[0]);

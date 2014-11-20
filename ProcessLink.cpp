@@ -9,7 +9,7 @@ ProcessLink::ProcessLink(void) : csInputHandle (nullptr), csOutputHandle(nullptr
 void ProcessLink::ConnectToCsServer()
 {
     // Wait a bit for the console to appear for ease of debugging.
-    std::this_thread::sleep_for(std::chrono::seconds(3));
+    std::this_thread::sleep_for(std::chrono::seconds(2));
 
     // Connects to the C# octocad instance.
     std::cout << "Connecting to Octocad C#..." << std::endl;
@@ -34,51 +34,93 @@ void ProcessLink::ConnectToCsServer()
 
 // Attempts to receive a message from the message stack. Returns true (and fills in the message)
 //  if there is a message, false otherwise.
-bool ProcessLink::ReceiveMessages(std::vector<char>& newMessage)
+bool ProcessLink::ReceiveMessages(MessageData *pNewMessage)
 {
+    // There's only one reader, so we can do the empty check before locking/unlocking.
+    if (!receivedMessages.empty())
+    {
+        stackModificationMutex.lock();
+        MessageData topMessage = receivedMessages.top();
+        pNewMessage->messageData = topMessage.messageData;
+        pNewMessage->messageLength = topMessage.messageLength;
+        pNewMessage->messageType = topMessage.messageType;
+
+        receivedMessages.pop();
+        stackModificationMutex.unlock();
+        return true;
+    }
+    return false;
 }
 
 // Continually reads a mesage in 1024 byte chunks from OctocadCs, and adds it to the message queue
 //  when the message has finished being read.
-//  WARNING: Messages are limited to the size of an Int62 -- which is really insane.
+//  WARNING: Messages are limited to the size of an unsigned Int64. I'm fairly certain other things will break before I hit that limit.
+//  WARNING2: This only works if messages don't get squished together. That *should* not occur with the server write structure.
 void ProcessLink::ReadFromCsServer()
 {
-    while (true)
+    const int BUFFER_LENGTH = 2048;
+    char data[BUFFER_LENGTH];
+    DWORD numRead = 1;
+
+    unsigned long long remainingMessageLength = 0;
+    bool receivingMessage = false;
+    while (numRead > 0)
     {
-        const int BUFFER_LENGTH = 2048;
-        char data[BUFFER_LENGTH];
-        DWORD numRead = 1;
+        ReadFile(csOutputHandle, data, BUFFER_LENGTH, &numRead, NULL);
 
-        unsigned long long remainingMessageLength = 0;
-        bool receivingMessage = false;
-        while (numRead >= 0)
+        if (numRead > 0)
         {
-            std::cout << "Reading bytes from the stream...";
-            ReadFile(csOutputHandle, data, BUFFER_LENGTH, &numRead, NULL);
-
-            if (numRead > 0)
+            if (receivingMessage)
             {
-                std::cout << "Got data" << std::endl;
-                continue;
-                if (receivingMessage)
+                // Add this onto the amount we have currently read for this message.
+                unsigned long long offset = newMessage.messageLength - remainingMessageLength;
+                std::copy(&data[0], &data[0] + numRead, &newMessage.messageData[offset]);
+
+                if (numRead > remainingMessageLength)
                 {
-                    // Add this onto the amount we have currently read for this message.
+                    std::cout << "ERROR: Squishing detected! Rewrite the message receiving backend!" << std::endl;
+                    remainingMessageLength = 0;
                 }
                 else
                 {
-                    //pNewMessage = new char[messageLength];
-                    if (numRead < sizeof(unsigned long long))
-                    {
-                        std::cout << "Read in insufficient data for the start of a message!" << std::endl;
-                    }
-
-                    newMessage.messageType = data[0];
-                    // Extract the message length from the stream
-                    std::copy(&data[1], &data[1] + sizeof(unsigned long long), reinterpret_cast<char*>(&remainingMessageLength));
-                    newMessage.messageLength = remainingMessageLength;
-
-                    std::cout << remainingMessageLength << std::endl;
+                    remainingMessageLength -= numRead;
                 }
+            }
+            else
+            {
+                if (numRead < sizeof(unsigned long long))
+                {
+                    std::cout << "Read in insufficient data for the start of a message!" << std::endl;
+                    return;
+                }
+
+                // Extract the message length and type from the stream
+                newMessage.messageType = data[0];
+                std::copy(&data[1], &data[1] + sizeof(unsigned long long), reinterpret_cast<char*>(&remainingMessageLength));
+                newMessage.messageLength = remainingMessageLength;
+                
+                // Create and copy in the rest of the message that was transmitted
+                if (remainingMessageLength != 0)
+                {
+                    newMessage.messageData = new char[(std::size_t)remainingMessageLength]; // Avoid auto-conversion to an int.
+                    std::copy(&data[9], &data[9] + numRead - 9, &newMessage.messageData[0]);
+                    remainingMessageLength = newMessage.messageLength + 9 - numRead;
+                }
+                else
+                {
+                    newMessage.messageData = nullptr;
+                }
+
+                receivingMessage = true;
+            }
+
+            // Finished receiving all the bytes we want.
+            if (receivingMessage && remainingMessageLength == 0)
+            {
+                stackModificationMutex.lock();
+                receivedMessages.push(newMessage);
+                stackModificationMutex.unlock();
+                receivingMessage = false;
             }
         }
     }
@@ -87,6 +129,12 @@ void ProcessLink::ReadFromCsServer()
 // Join to the threads so that exiting won't crash.
 ProcessLink::~ProcessLink(void)
 {
+    // This must be closed first so that the C# application's read thread terminates...
+    if (csInputHandle != nullptr)
+    {
+        CloseHandle(csInputHandle);
+    }
+
     if (connectionThread.joinable())
     {
         connectionThread.join();
@@ -96,10 +144,7 @@ ProcessLink::~ProcessLink(void)
         readThread.join();
     }
 
-    if (csInputHandle != nullptr)
-    {
-        CloseHandle(csInputHandle);
-    }
+    // ... which allows our read thread to terminate in the join phase.
     if (csOutputHandle != nullptr)
     {
         CloseHandle(csOutputHandle);

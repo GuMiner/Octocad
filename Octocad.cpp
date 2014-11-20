@@ -3,6 +3,8 @@
 #include "GLManager.h"
 #include "InputSystem.h"
 #include "Vertex.h"
+#include "ProcessLink.h"
+#include "MessageHandler.h"
 
 // OpenGL libraries
 #pragma comment(lib, "opengl32")
@@ -242,6 +244,25 @@ bool Octocad::RunApplication()
             {
             default:
                 std::cout << "What?" << std::endl;
+                break;
+            }
+        }
+
+        // Check if we received any messages from the C# side
+        MessageData newMessage;
+        if (processLink.ReceiveMessages(&newMessage))
+        {
+            std::cout << "Recieved message of type " << (int)newMessage.messageType << std::endl;
+            switch (newMessage.messageType)
+            {
+            case MessageHandler::EXIT_MESSAGE:
+                GLManager::GetManager()->running = false;
+                break;
+            case MessageHandler::PREFERENCES_UPDATE:
+                // TODO perform preferences update
+                break;
+            default:
+                std::cout << "ERROR: Unable to translate message!" << std::endl;
                 break;
             }
         }

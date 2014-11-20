@@ -23,10 +23,11 @@ namespace Octocad_2D
             {
                 case MessageType.PREFERENCES_UPDATE:
                     byte[] length = BitConverter.GetBytes((double)values[0]);
-                    byte[] width = BitConverter.GetBytes((double)values[1]);
-                    byte[] height = BitConverter.GetBytes((double)values[2]);
-                    byte[] resolution = BitConverter.GetBytes((double)values[3]);
-                    returnBytes = ConcactenateAndReturn(messageType, length, width, height, resolution);
+                    byte[] resolution = BitConverter.GetBytes((double)values[1]);
+                    returnBytes = ConcactenateAndReturn(messageType, length, resolution);
+                    break;
+                case MessageType.EXTRUDE_SETTINGS:
+                    // TODO
                     break;
                 case MessageType.EXIT_MESSAGE:
                     returnBytes = new byte[] { (byte)messageType, 0, 0, 0, 0, 0, 0, 0, 0 };

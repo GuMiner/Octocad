@@ -88,8 +88,8 @@ namespace Octocad_2D
         {
             xMin = -Preferences.length/2;
             xMax = Preferences.length/2;
-            yMin = -Preferences.width/2;
-            yMax = Preferences.width/2;
+            yMin = -Preferences.length/2;
+            yMax = Preferences.length/2;
             xDrawPercentage = 1;
             xOffset = 0;
             yOffset = 0;
@@ -417,7 +417,7 @@ namespace Octocad_2D
             // Step 1: Normalize lines to all terminate on intersection or normal endpoints.
 
             // Step 2: Draw onto a life-sized bitmap.
-            Bitmap flatMapping = new Bitmap((int)(Preferences.length/Preferences.resolution), (int)(Preferences.height/Preferences.resolution), PixelFormat.Format1bppIndexed);
+            Bitmap flatMapping = new Bitmap((int)(Preferences.length/Preferences.resolution), (int)(Preferences.length/Preferences.resolution), PixelFormat.Format1bppIndexed);
             DrawForConversion(ref flatMapping);
 
             // Step 3: Show to user, let user select segments for extrusion / revolve point.

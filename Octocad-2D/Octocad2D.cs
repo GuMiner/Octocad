@@ -186,6 +186,12 @@ namespace Octocad_2D
                     e.Cancel = true; // Don't exit at all.
                 }
             }
+
+            // Stop the process communication thread so we successfully exit.
+            if (!e.Cancel)
+            {
+                processLink.HaltCommunication();
+            }
         }
 
         private void Octocad2D_MouseMove(object sender, MouseEventArgs e)

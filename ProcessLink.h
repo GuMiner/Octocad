@@ -17,6 +17,9 @@ class ProcessLink
     bool connecting;
 
     MessageData newMessage;
+
+    // Normally one would use a message queue. I'm using a message stack. Can anyone guess why?
+    std::mutex stackModificationMutex;
     std::stack<MessageData> receivedMessages;
 
     void ConnectToCsServer();
@@ -25,7 +28,7 @@ public:
     ProcessLink();
     //void WriteToOctocadCs(char [] data);               //  DWORD numWritten = 0
            //     WriteFile(csHandle, &data, 1, &numWritten, NULL);
-    bool ReceiveMessages(std::vector<char>& newMessage);
+    bool ReceiveMessages(MessageData *pNewMessage);
     ~ProcessLink();
 };
 
