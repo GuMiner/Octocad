@@ -9,7 +9,7 @@ namespace Octocad_2D
     /// <summary>
     /// Defines a drawing board that the lines, shapes, etc are drawn on.
     /// </summary>
-    public class DrawingBoard
+    class DrawingBoard
     {
         private List<Primitive> primitives;
         private List<Knot> knots;
@@ -24,6 +24,9 @@ namespace Octocad_2D
         private bool isSnappedToEndpoint;
         private bool isSnappedToPrimitive;
         private int snapIdx, primitiveIdx;
+
+        // Defines the orientation (theta, phi) and offset (radius) of the drawing plane;
+        private double theta, phi, radius;
 
         SolidBrush drawBackgroundBrush;
         Pen gridPen, stencilPen, specialPen, activePen; // Should be in increasing orders of darkness
@@ -44,8 +47,11 @@ namespace Octocad_2D
         /// </summary>
         private double mouseX, mouseY;
 
-        public DrawingBoard()
+        private ProcessLink cppLink;
+
+        public DrawingBoard(ProcessLink processLink)
         {
+            cppLink = processLink;
             primitives = new List<Primitive>();
             knots = new List<Knot>();
             calculatedEndpoints = new List<CalculatedEndpoint>();
@@ -62,6 +68,10 @@ namespace Octocad_2D
             isSnappedToPrimitive = false;
             snapIdx = -1;
             primitiveIdx = -1;
+
+            theta = 0;
+            phi = 0;
+            radius = 0;
 
             drawBackgroundBrush = new SolidBrush(Color.Cornsilk);
             gridPen = new Pen(Color.LightGray, 1);
@@ -415,10 +425,9 @@ namespace Octocad_2D
             bsp.ShowDialog(); // Hold until the user hits cancel or ok
             if (bsp.okToProceed)
             {
-
+                // Step 4: Send filled-out bitmap to Octocad C++ for extrusion / revolving.
+                
             }
-
-            // Step 4: Send filled-out bitmap to Octocad C++ for extrusion / revolving.
         }
 
         /// <summary>

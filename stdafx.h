@@ -8,6 +8,7 @@
 // Data structures
 #include <vector>
 #include <map>
+#include <stack>
 
 // File and console IO
 #include <iostream>
@@ -20,6 +21,7 @@
 // Time and thread management
 #include <chrono>
 #include <thread>
+#include <mutex>
 
 // Miscellaneous
 #include <limits>

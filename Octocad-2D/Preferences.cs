@@ -10,15 +10,19 @@ using System.Windows.Forms;
 
 namespace Octocad_2D
 {
-    public partial class Preferences : Form
+    partial class Preferences : Form
     {
         public static double length, width, height, resolution;
         public static String units;
 
-        public Preferences()
+        private ProcessLink cppLink;
+
+        public Preferences(ProcessLink processLink)
         {
             InitializeComponent();
             resetButton_Click(null, null);
+
+            cppLink = processLink;
         }
 
         public static double GetErrorResolution()
@@ -63,6 +67,9 @@ namespace Octocad_2D
         private void acceptButton_Click(object sender, EventArgs e)
         {
             this.Hide();
+
+            // TODO pass in units separately
+            cppLink.WriteToOctocadCpp(MessageHandler.TranslateMessage(MessageHandler.MessageType.PREFERENCES_UPDATE, length, width, height, resolution));
         }
 
         /// <summary>

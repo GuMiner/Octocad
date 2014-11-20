@@ -12,12 +12,11 @@ namespace Octocad_2D
 {
     class ProcessLink
     {
-        // TODO make this constantly mutate so that multiple copies of Octocad can run at once.
-        public const String OctocadPipeName = "\\\\.\\pipe\\Octocad";
+        private const String OCTOCAD_IN = "OctocadIn", OCTOCAD_OUT = "OctocadOut";
         private Thread pipeThread;
 
         private int BUFFER_SIZE = 4096;
-        private NamedPipeServerStream communicationStream;
+        private NamedPipeServerStream inputCommunicationStream, outputCommunicationStream;
 
         private Thread readThread;
         private bool isInSetup;
@@ -26,12 +25,13 @@ namespace Octocad_2D
 
         public ProcessLink()
         {
-            communicationStream = null;
+            inputCommunicationStream = null;
+            outputCommunicationStream = null;
             isInSetup = true;
 
             // Start up the server
             pipeThread = new Thread(CreatePipeServer);
-            // pipeThread.Start();
+            pipeThread.Start();
 
             // Start up the C++ program. TODO this should really be gated on waiting until the server is up.
             octocadCpp = new Process();
@@ -42,31 +42,39 @@ namespace Octocad_2D
                 WorkingDirectory = Path.GetFullPath("..\\..\\..\\")
             };
             Console.WriteLine(octocadCpp.StartInfo.WorkingDirectory);
-           // octocadCpp.Start();
+            octocadCpp.Start();
         }
 
         ~ProcessLink()
         {
-            if (communicationStream != null)
+            if (inputCommunicationStream != null)
             {
-                communicationStream.Dispose();
+                inputCommunicationStream.Dispose();
+            }
+
+            if (outputCommunicationStream != null)
+            {
+                outputCommunicationStream.Dispose();
             }
         }
 
         private void CreatePipeServer()
         {
-            communicationStream = new NamedPipeServerStream("Octocad", PipeDirection.InOut);
+            inputCommunicationStream = new NamedPipeServerStream("OctocadIn", PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.WriteThrough);
+            outputCommunicationStream = new NamedPipeServerStream("OctocadOut", PipeDirection.Out, 1, PipeTransmissionMode.Byte, PipeOptions.WriteThrough);
 
             Console.WriteLine("Waiting for Octocad cpp...");
-            communicationStream.WaitForConnection();
+            
+            inputCommunicationStream.WaitForConnection();
+            Console.WriteLine("C++ --> C# connected");
 
-            Console.WriteLine("Connected to Octocad cpp.");
+            outputCommunicationStream.WaitForConnection();
+            Console.WriteLine("C++ <-- C# connected");
+
             isInSetup = false;
 
             readThread = new Thread(ReadFromOctocadCpp);
             readThread.Start();
-
-            WriteToOctocadCpp(new byte[] { 65 }, 1);
         }
 
         /// <summary>
@@ -78,12 +86,12 @@ namespace Octocad_2D
 
             while (true)
             {
-                int readCount = communicationStream.Read(inputBuffer, 0, BUFFER_SIZE);
+                Console.WriteLine("Reading bytes from the stream...");
+                int readCount = inputCommunicationStream.Read(inputBuffer, 0, BUFFER_SIZE);
                 if (readCount > 0)
                 {
-                    WriteToOctocadCpp(inputBuffer, 1);
-                    Thread.Sleep(1000);
                     Console.WriteLine((char)inputBuffer[0]);
+                    inputCommunicationStream.Write(inputBuffer, 0, 1);
                 }
             }
         }
@@ -92,17 +100,17 @@ namespace Octocad_2D
         /// Writes communications to the Octocad CPP system.
         /// </summary>
         /// <param name="sendData"></param>
-        /// <param name="dataLength"></param>
         /// <returns></returns>
-        public bool WriteToOctocadCpp(byte[] sendData, uint dataLength)
+        public bool WriteToOctocadCpp(byte[] sendData)
         {
-            if (isInSetup || communicationStream == null)
+            if (isInSetup)
             {
                 return false;
             }
 
-            communicationStream.Write(sendData, 0, (int)dataLength);
-            communicationStream.Flush();
+            Console.WriteLine("Writing bytes to the stream...");
+            outputCommunicationStream.Write(sendData, 0, sendData.Length);
+            outputCommunicationStream.Flush();
             return true;
         }
     }

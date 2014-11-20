@@ -69,6 +69,7 @@
     </Compile>
     <Compile Include="Knot.cs" />
     <Compile Include="Line.cs" />
+    <Compile Include="MessageHandler.cs" />
     <Compile Include="Octocad2D.cs">
       <SubType>Form</SubType>
     </Compile>

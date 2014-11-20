@@ -17,10 +17,13 @@ namespace Octocad_2D
 
         private Bitmap originalBitmapCopy;
         public Bitmap edittedBitmap;
+        public double distance;
+        public bool isDistanceMirrored;
 
         public BitSelectionPane(ref Bitmap originalBitmap)
         {
             InitializeComponent();
+            unitLabel.Text = Preferences.units;
 
             originalBitmapCopy = originalBitmap;
             resetButton_Click(null, null);
@@ -35,6 +38,8 @@ namespace Octocad_2D
         private void okButton_Click(object sender, EventArgs e)
         {
             okToProceed = true;
+            isDistanceMirrored = isMirrored.Checked;
+            distance = Double.Parse(distanceBox.Text);
             Hide();
         }
 
@@ -46,7 +51,7 @@ namespace Octocad_2D
 
         private void BitSelectionPane_Resize(object sender, EventArgs e)
         {
-            this.Invalidate(true);
+            bitmapPanel.Invalidate();
         }
 
 
@@ -60,7 +65,7 @@ namespace Octocad_2D
                 FillOrClear(xP, yP);
             }
 
-            this.Invalidate(true);
+            bitmapPanel.Invalidate();
         }
 
         /// <summary>
@@ -128,7 +133,7 @@ namespace Octocad_2D
             }
 
             isFilled = DrawingBoard.CheckPixel(x, y, ref restrictionBitmapData);
-            if (isSetFilled == isFilled)
+            if (isFilled)
             {
                 return false;
             }
@@ -158,7 +163,18 @@ namespace Octocad_2D
             palette.Entries[0] = Color.FromArgb(255, 0, 255, 0); // Solid
             edittedBitmap.Palette = palette;
 
-            this.Invalidate(true);
+            bitmapPanel.Invalidate();
+        }
+
+        private void distanceBox_TextChanged(object sender, EventArgs e)
+        {
+            double dist;
+            bool parseSuccessful = Double.TryParse(distanceBox.Text, out dist);
+            if (!parseSuccessful)
+            {
+                MessageBox.Show("Could not parse the distance as a valid number!");
+                distanceBox.Text = "1.0";
+            }
         }
     }
 }

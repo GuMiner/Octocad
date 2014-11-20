@@ -38,13 +38,14 @@ namespace Octocad_2D
             InitializeComponent();
             MouseWheel += Octocad2D_MouseWheel;
 
-            preferences = new Preferences();
-            drawingBoard = new DrawingBoard();
+            processLink = new ProcessLink();
+            preferences = new Preferences(processLink);
+            drawingBoard = new DrawingBoard(processLink);
 
             toolbox = new Toolbox(drawingBoard);
             toolbox.Show();
             
-            processLink = new ProcessLink();
+            
 
             hasSaved = false;
             isNew = true;

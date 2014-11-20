@@ -10,7 +10,7 @@ using System.Windows.Forms;
 
 namespace Octocad_2D
 {
-    public partial class Toolbox : Form
+    partial class Toolbox : Form
     {
         public enum EditMode { SELECT, LINE, ARC, DIMENSION };
         public static EditMode editMode;
