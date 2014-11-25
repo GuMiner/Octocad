@@ -15,6 +15,7 @@ namespace Octocad_2D
         public static double length, resolution;
         public static String units;
 
+        public DrawingBoard drawingBoard;
         private ProcessLink cppLink;
 
         public Preferences(ProcessLink processLink)
@@ -64,8 +65,13 @@ namespace Octocad_2D
         {
             this.Hide();
 
-            // TODO pass in units separately
+            length = Double.Parse(lengthBox.Text);
+            resolution = Double.Parse(resolutionBox.Text);
+
+            // TODO pass in units if necessary
             cppLink.WriteToOctocadCpp(MessageHandler.TranslateMessage(MessageHandler.MessageType.PREFERENCES_UPDATE, length, resolution));
+
+            drawingBoard.UpdateFromPreferences();
         }
 
         /// <summary>

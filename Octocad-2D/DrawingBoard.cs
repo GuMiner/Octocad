@@ -426,7 +426,9 @@ namespace Octocad_2D
             if (bsp.okToProceed)
             {
                 // Step 4: Send filled-out bitmap to Octocad C++ for extrusion / revolving.
-                
+                cppLink.WriteToOctocadCpp(MessageHandler.TranslateMessage(MessageHandler.MessageType.EXTRUDE_SETTINGS, theta, phi, radius, bsp.distance, bsp.IsMirrored, Toolbox.operationMode));
+
+                cppLink.WriteToOctocadCpp(MessageHandler.TranslateMessage(MessageHandler.MessageType.PLANE_BIT_DATA, bsp.edittedBitmap));
             }
         }
 

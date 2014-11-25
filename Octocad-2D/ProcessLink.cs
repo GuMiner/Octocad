@@ -38,7 +38,7 @@ namespace Octocad_2D
             octocadCpp.StartInfo = new ProcessStartInfo()
             {
                 UseShellExecute = true,
-                FileName = Path.GetFullPath("..\\..\\..\\..\\Release\\Octocad.exe"),
+                FileName = Path.GetFullPath("..\\..\\..\\..\\Debug\\Octocad.exe"),
                 WorkingDirectory = Path.GetFullPath("..\\..\\..\\")
             };
             Console.WriteLine(octocadCpp.StartInfo.WorkingDirectory);

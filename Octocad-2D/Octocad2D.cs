@@ -41,6 +41,7 @@ namespace Octocad_2D
             processLink = new ProcessLink();
             preferences = new Preferences(processLink);
             drawingBoard = new DrawingBoard(processLink);
+            preferences.drawingBoard = drawingBoard;
 
             toolbox = new Toolbox(drawingBoard);
             toolbox.Show();

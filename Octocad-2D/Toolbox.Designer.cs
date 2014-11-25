@@ -36,11 +36,11 @@
             this.snapToGrid = new System.Windows.Forms.CheckBox();
             this.snapEndpoints = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.extrudeButton = new System.Windows.Forms.Button();
-            this.revolveButton = new System.Windows.Forms.Button();
             this.intersectionRadio = new System.Windows.Forms.RadioButton();
             this.subtractRadio = new System.Windows.Forms.RadioButton();
             this.addRadio = new System.Windows.Forms.RadioButton();
+            this.revolveButton = new System.Windows.Forms.Button();
+            this.extrudeButton = new System.Windows.Forms.Button();
             this.actionsBox.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
@@ -147,26 +147,6 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "3D Create";
             // 
-            // extrudeButton
-            // 
-            this.extrudeButton.Location = new System.Drawing.Point(3, 19);
-            this.extrudeButton.Name = "extrudeButton";
-            this.extrudeButton.Size = new System.Drawing.Size(74, 23);
-            this.extrudeButton.TabIndex = 0;
-            this.extrudeButton.Text = "Extrude";
-            this.extrudeButton.UseVisualStyleBackColor = true;
-            this.extrudeButton.Click += new System.EventHandler(this.extrudeButton_Click);
-            // 
-            // revolveButton
-            // 
-            this.revolveButton.Location = new System.Drawing.Point(3, 48);
-            this.revolveButton.Name = "revolveButton";
-            this.revolveButton.Size = new System.Drawing.Size(75, 23);
-            this.revolveButton.TabIndex = 1;
-            this.revolveButton.Text = "Revolve";
-            this.revolveButton.UseVisualStyleBackColor = true;
-            this.revolveButton.Click += new System.EventHandler(this.revolveButton_Click);
-            // 
             // intersectionRadio
             // 
             this.intersectionRadio.AutoSize = true;
@@ -177,6 +157,7 @@
             this.intersectionRadio.TabStop = true;
             this.intersectionRadio.Text = "Intersection";
             this.intersectionRadio.UseVisualStyleBackColor = true;
+            this.intersectionRadio.CheckedChanged += new System.EventHandler(this.intersectionRadio_CheckedChanged);
             // 
             // subtractRadio
             // 
@@ -188,6 +169,7 @@
             this.subtractRadio.TabStop = true;
             this.subtractRadio.Text = "Subtract";
             this.subtractRadio.UseVisualStyleBackColor = true;
+            this.subtractRadio.CheckedChanged += new System.EventHandler(this.subtractRadio_CheckedChanged);
             // 
             // addRadio
             // 
@@ -200,6 +182,27 @@
             this.addRadio.TabStop = true;
             this.addRadio.Text = "Add";
             this.addRadio.UseVisualStyleBackColor = true;
+            this.addRadio.CheckedChanged += new System.EventHandler(this.addRadio_CheckedChanged);
+            // 
+            // revolveButton
+            // 
+            this.revolveButton.Location = new System.Drawing.Point(3, 48);
+            this.revolveButton.Name = "revolveButton";
+            this.revolveButton.Size = new System.Drawing.Size(75, 23);
+            this.revolveButton.TabIndex = 1;
+            this.revolveButton.Text = "Revolve";
+            this.revolveButton.UseVisualStyleBackColor = true;
+            this.revolveButton.Click += new System.EventHandler(this.revolveButton_Click);
+            // 
+            // extrudeButton
+            // 
+            this.extrudeButton.Location = new System.Drawing.Point(3, 19);
+            this.extrudeButton.Name = "extrudeButton";
+            this.extrudeButton.Size = new System.Drawing.Size(74, 23);
+            this.extrudeButton.TabIndex = 0;
+            this.extrudeButton.Text = "Extrude";
+            this.extrudeButton.UseVisualStyleBackColor = true;
+            this.extrudeButton.Click += new System.EventHandler(this.extrudeButton_Click);
             // 
             // Toolbox
             // 

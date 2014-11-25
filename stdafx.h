@@ -1,6 +1,9 @@
 #pragma once
 // Precompiled header file to speed up compilations
 
+// For std::copy and the like.
+#define _SCL_SECURE_NO_WARNINGS
+
 // Standard C includes
 #include <cstdlib>
 #include <cmath>

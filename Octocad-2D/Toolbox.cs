@@ -12,8 +12,12 @@ namespace Octocad_2D
 {
     partial class Toolbox : Form
     {
-        public enum EditMode { SELECT, LINE, ARC, DIMENSION };
+        public enum EditMode { SELECT = 0, LINE, ARC, DIMENSION };
         public static EditMode editMode;
+
+        public enum OperationMode { ADD = 0, SUBTRACT, INTERSECT };
+        public static OperationMode operationMode;
+
         public static bool isSnapToGrid, isSnapEndpoints;
 
         private DrawingBoard drawingBoard;
@@ -22,6 +26,7 @@ namespace Octocad_2D
         {
             InitializeComponent();
             editMode = EditMode.SELECT;
+            operationMode = OperationMode.ADD;
             isSnapToGrid = true;
             isSnapEndpoints = true;
 
@@ -66,6 +71,21 @@ namespace Octocad_2D
         private void revolveButton_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void addRadio_CheckedChanged(object sender, EventArgs e)
+        {
+            operationMode = OperationMode.ADD;
+        }
+
+        private void subtractRadio_CheckedChanged(object sender, EventArgs e)
+        {
+            operationMode = OperationMode.SUBTRACT;
+        }
+
+        private void intersectionRadio_CheckedChanged(object sender, EventArgs e)
+        {
+            operationMode = OperationMode.INTERSECT;
         }
     }
 }

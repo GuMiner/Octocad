@@ -18,7 +18,7 @@
 
 const char* Octocad::NAME = "Octocad v1.0";
 
-Octocad::Octocad(void) : processLink()
+Octocad::Octocad(void) : processLink(), shapeManipulator()
 {
 }
 
@@ -135,13 +135,9 @@ bool Octocad::ApplicationSetup()
     //   Non Open GL portions
     // -----------------------------------
     
-    // Setup the default octree
-    double smallScale = 0.01;
-    testTree = new Octree(2, smallScale, false);
-
-    // Setup communication with our C# partner
-
-
+    // Setup something in our shape manipulation system.
+    shapeManipulator.Refresh();
+    
     // -----------------------------------
 
     return true;
@@ -149,8 +145,6 @@ bool Octocad::ApplicationSetup()
 
 Octocad::~Octocad()
 {
-    delete testTree;
-
     // Application shutdown.
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &pointBuffer);
@@ -172,16 +166,19 @@ void Octocad::SetupViewport()
     glViewport(0, 0, pM->width, pM->height);
 }
 
+// Draws the entire C++ display.
 void Octocad::Render(double currentTime)
 {
-    colorVertex *pVertices = testTree->Triangulate(vertexCount);
+    // ---------- Draw the designed shape ----------
+    colorVertex *pVertices = shapeManipulator.LoadTriangulatedShape(vertexCount);
+    if (pVertices != nullptr)
+    {
+        // This was a reload operation, changes were performed that must be flushed to the GPU.
+        glBufferData(GL_ARRAY_BUFFER, vertexCount*sizeof(colorVertex), pVertices, GL_STATIC_DRAW);
+        delete [] pVertices;
+    }
 
-    glBufferData(GL_ARRAY_BUFFER, vertexCount*sizeof(colorVertex), pVertices, GL_STATIC_DRAW);
-
-    // Delete the verticies after sending them into OpenGL
-    delete [] pVertices;
-
-    lookAt = gm::Lookat(gm::vec3(0, 0, 0), gm::vec3(2, 0, 6), gm::vec3(0, 1, 0));
+    lookAt = gm::Lookat(gm::vec3(0, 0, 0), gm::vec3(0, 20, 20), gm::vec3(0, 1, 0));
     glUseProgram(boringProgram);
 
     const GLfloat color[] = {0, 0, 0, 1};
@@ -192,26 +189,18 @@ void Octocad::Render(double currentTime)
     gm::mat4 result = proj_matrix*lookAt;
     glUniformMatrix4fv(proj_location, 1, GL_FALSE, result);
 
-    for (int i = 0; i < 1; i++)
-    {
-        for (int j = 0; j < 1; j++)
-        {
-            for (int k = 0; k < 1; k++)
-            {
-                gm::mat4 mv_matrix = gm::Rotate((float)currentTime*0.5f, gm::vec3(0.0f, 1.0f, 0.0f));
-                glUniformMatrix4fv(mv_location, 1, GL_FALSE, mv_matrix);
-                glDrawArrays(GL_TRIANGLES, 0, vertexCount); //Instanced = 1
-            }
-        }
-    }
+    gm::mat4 mv_matrix = gm::Rotate((float)currentTime*0.5f, gm::vec3(0.0f, 1.0f, 0.0f));
+    glUniformMatrix4fv(mv_location, 1, GL_FALSE, mv_matrix);
+    glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+
+    // ---------------------------------------------
 }
 
+// Updates the entire C++ portion.
 bool Octocad::RunApplication()
 {
     double timeDelta = 1.0/(double)GLManager::FPS_TARGET;
     double lastTime = glfwGetTime();
-
-    // Load up what's in the octree for display
 
     double lastDisplayTime = lastTime;
     long frameCounter = 0;
@@ -259,11 +248,37 @@ bool Octocad::RunApplication()
                 GLManager::GetManager()->running = false;
                 break;
             case MessageHandler::PREFERENCES_UPDATE:
-                // TODO perform preferences update
+                CsPreferences preferences;
+                MessageHandler::DecodePreferences(preferences, &newMessage.messageData);
+                std::cout << "Preferences: Length: " << preferences.length << ", Resolution: " << preferences.resolution << std::endl;
+                
+                // Recreate the octree area based on the new preferences data.
+                shapeManipulator.Refresh(preferences.length, preferences.resolution);
+                break;
+            case MessageHandler::EXTRUDE_SETTINGS:
+                CsExtrudeSettings extrudeSettings;
+                MessageHandler::DecodeExtrudeSettings(extrudeSettings, &newMessage.messageData);
+                std::cout << "Extrude data: " << extrudeSettings.theta << " " << extrudeSettings.phi << " " << extrudeSettings.radius << " " << extrudeSettings.distance << " " << extrudeSettings.isMirrored << " " << extrudeSettings.extrusionMode << std::endl;
+
+                shapeManipulator.AddExecute(extrudeSettings);
+                break;
+            case MessageHandler::PLANE_BIT_DATA:
+                CsBitPlane bitPlane;
+                MessageHandler::DecodePlaneBitData(bitPlane, &newMessage.messageData);
+                std::cout << "Bit plane data: " << bitPlane.width << " " << bitPlane.height << " " << bitPlane.stride << std::endl;
+
+                shapeManipulator.AddExecute(bitPlane);
                 break;
             default:
                 std::cout << "ERROR: Unable to translate message!" << std::endl;
                 break;
+            }
+
+            // At this point, recipients will have copied out the data that they are interested in.
+            // Clean up the message data after transmission. 
+            if (newMessage.messageLength != 0)
+            {
+                delete [] newMessage.messageData;
             }
         }
 

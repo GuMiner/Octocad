@@ -230,6 +230,27 @@ namespace gm
             return result;
         }
 
+        // Conjugate operations that are just plain useful.
+        vecX& operator+=(vecX other)
+        {
+            for (size_t i = 0; i < length; i++)
+            {
+                data[i] += other[i];
+            }
+
+            return *this;
+        }
+
+        vecX& operator-=(vecX other)
+        {
+            for (size_t i = 0; i < length; i++)
+            {
+                data[i] -= other[i];
+            }
+
+            return *this;
+        }
+
         // Dot product
         T Dot (vecX<T, length>& other)
         {

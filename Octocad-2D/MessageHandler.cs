@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -22,12 +24,35 @@ namespace Octocad_2D
             switch (messageType)
             {
                 case MessageType.PREFERENCES_UPDATE:
+                    // Length and resolution passed in
                     byte[] length = BitConverter.GetBytes((double)values[0]);
                     byte[] resolution = BitConverter.GetBytes((double)values[1]);
                     returnBytes = ConcactenateAndReturn(messageType, length, resolution);
                     break;
                 case MessageType.EXTRUDE_SETTINGS:
-                    // TODO
+                    // Theta, phi, radius, distance, and isMirrored passed in.
+                    byte[] theta = BitConverter.GetBytes((double)values[0]);
+                    byte[] phi = BitConverter.GetBytes((double)values[1]);
+                    byte[] radius = BitConverter.GetBytes((double)values[2]);
+                    byte[] distance = BitConverter.GetBytes((double)values[3]);
+                    byte[] isMirrored = BitConverter.GetBytes((bool)values[4]);
+                    byte[] operationMode = BitConverter.GetBytes((Int32)values[5]);
+                    returnBytes = ConcactenateAndReturn(messageType, theta, phi, radius, distance, isMirrored, operationMode);
+                    break;
+                case MessageType.PLANE_BIT_DATA:
+                    Bitmap mainBitmap = (Bitmap)values[0];
+                    BitmapData bitmapData = mainBitmap.LockBits(new Rectangle(0, 0, mainBitmap.Width, mainBitmap.Height), ImageLockMode.ReadOnly, mainBitmap.PixelFormat);
+                    
+                    byte[] width = BitConverter.GetBytes((Int32)bitmapData.Width);
+                    byte[] height = BitConverter.GetBytes((Int32)bitmapData.Height);
+                    byte[] stride = BitConverter.GetBytes((Int32)bitmapData.Stride);
+
+                    int byteCount = bitmapData.Stride * bitmapData.Height;
+                    byte[] image = new byte[byteCount];
+                    Marshal.Copy(bitmapData.Scan0, image, 0, byteCount);
+
+                    mainBitmap.UnlockBits(bitmapData);
+                    returnBytes = ConcactenateAndReturn(messageType, width, height, stride, image);
                     break;
                 case MessageType.EXIT_MESSAGE:
                     returnBytes = new byte[] { (byte)messageType, 0, 0, 0, 0, 0, 0, 0, 0 };

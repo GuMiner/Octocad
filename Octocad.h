@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Octree.h"
+#include "ShapeManipulator.h"
 #include "ProcessLink.h"
 
 class Octocad
@@ -21,9 +22,10 @@ class Octocad
     // Transfered to the shader program.
     GLint mv_location, proj_location;
 
-    // Test Octree
-    Octree *testTree;
+    // All shape manipulation and storage.
+    ShapeManipulator shapeManipulator;
 
+    // Link to C#
     ProcessLink processLink;
 
     void SetupViewport();

@@ -85,6 +85,7 @@
             // 
             // isMirrored
             // 
+            this.isMirrored.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.isMirrored.AutoSize = true;
             this.isMirrored.Location = new System.Drawing.Point(344, 445);
             this.isMirrored.Name = "isMirrored";
