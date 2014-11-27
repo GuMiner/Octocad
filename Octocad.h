@@ -9,7 +9,7 @@ class Octocad
     // Opengl window and matrixes (CPU)
     GLFWwindow *pWindow;
     float aspect;
-    gm::mat4 proj_matrix, lookAt;
+    gmtl::Matrix44f proj_matrix, lookAt;
 
     // Application drawing data
     GLuint boringProgram;

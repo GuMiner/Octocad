@@ -23,6 +23,9 @@ public:
     std::string title;
 
     GLuint CompileShaderProgram(const char rootName []);
+    
+    static gmtl::Matrix44f Lookat(gmtl::Vec3f target, gmtl::Vec3f camera, gmtl::Vec3f up);
+    static gmtl::Matrix44f Rotate(float angle, gmtl::Vec3f axis);
 
     // Manager initialization.
     static bool Initialize(float yFov, float nearPlane, float farPlane, bool fullscreen, int width, int height, std::string title);

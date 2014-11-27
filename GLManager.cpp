@@ -90,6 +90,43 @@ bool GLManager::Initialize(float yFov, float nearPlane, float farPlane, bool ful
     return true;
 }
 
+// Generates a look-at matrix
+gmtl::Matrix44f GLManager::Lookat(gmtl::Vec3f target, gmtl::Vec3f camera, gmtl::Vec3f up)
+{
+    // Rewritten to use the standardized public-domain code for a RH matrix here: http://msdn.microsoft.com/en-us/library/windows/desktop/bb281711(v=vs.85).aspx
+    gmtl::Vec3f zAxis = camera - target;
+    gmtl::normalize(zAxis);
+    gmtl::Vec3f xAxis = gmtl::makeCross(up, zAxis);
+    gmtl::normalize(xAxis);
+    gmtl::Vec3f yAxis = gmtl::makeCross(zAxis, xAxis);
+
+    gmtl::Matrix44f result;
+    result.set(
+        xAxis[0], yAxis[0], zAxis[0], 0,
+        xAxis[1], yAxis[1], zAxis[1], 0,
+        xAxis[2], yAxis[2], zAxis[2], 0,
+        -gmtl::dot(xAxis, camera), -gmtl::dot(yAxis, camera), -gmtl::dot(zAxis, camera), 1);
+    result = gmtl::transpose(result);
+    return result;
+}
+
+// Performs axis-angle rotation.
+gmtl::Matrix44f GLManager::Rotate(float angle, gmtl::Vec3f axis)
+{
+    gmtl::Matrix44f result;
+
+    float c = cosf(angle);
+    float s = sinf(angle);
+    float omc = 1.0f - c;
+
+    result.set((axis[0] * axis[0] * omc + c), (axis[1] * axis[0] * omc + axis[2] * s), (axis[0] * axis[2] * omc - axis[1] * s), 0.0f,
+               (axis[0] * axis[1] * omc - axis[2] * s), (axis[1] * axis[1] * omc + c), (axis[1] * axis[2] * omc + axis[0] * s), 0.0f,
+               (axis[0] * axis[2] * omc + axis[1] * s), (axis[1] * axis[2] * omc - axis[0] * s), (axis[2]* axis[2] * omc + c), 0.0f,
+               0.0f, 0.0f, 0.0f, 1.0f);
+    result = gmtl::transpose(result);
+    return result;
+}
+
 GLManager* GLManager::GetManager()
 {
     return m_pManager;

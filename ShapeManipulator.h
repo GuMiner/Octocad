@@ -40,7 +40,7 @@ class ShapeManipulator
     // Next operation to be performed upon the shape.
     OperationData currentOperation;
     
-    inline bool IsBitFilled(int xp, int yp, CsBitPlane &bitPlane);
+    bool IsBitFilled(int xp, int yp, CsBitPlane &bitPlane);
     void ExecuteOperation();
 public:
 

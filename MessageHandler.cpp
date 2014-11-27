@@ -50,5 +50,5 @@ void MessageHandler::DecodePlaneBitData(CsBitPlane &bitPlane, char **ppData)
 
     // Copy in the image data.
     bitPlane.pImage = new char[bitPlane.height*bitPlane.stride];
-    std::copy(&(*ppData)[offset], &(*ppData)[offset] + sizeof(int), &bitPlane.pImage[0]);
+    std::copy(&(*ppData)[offset], &(*ppData)[offset] + bitPlane.height*bitPlane.stride, &bitPlane.pImage[0]);
 }

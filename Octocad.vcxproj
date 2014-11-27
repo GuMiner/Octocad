@@ -69,7 +69,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="GLManager.h" />
-    <ClInclude Include="gm.h" />
     <ClInclude Include="InputSystem.h" />
     <ClInclude Include="MessageHandler.h" />
     <ClInclude Include="Octocad.h" />
@@ -82,7 +81,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GLManager.cpp" />
-    <ClCompile Include="gm.cpp" />
     <ClCompile Include="InputSystem.cpp" />
     <ClCompile Include="MessageHandler.cpp" />
     <ClCompile Include="Octocad.cpp" />

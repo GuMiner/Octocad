@@ -41,5 +41,6 @@
 #define GLFW_DLL 1
 #include <GLFW/glfw3.h>
 
-// General Math 'library'.
-#include "gm.h"
+// GMTL mathematics library
+// -- because a premade solution makes a lot of sense, and it's compatible with the MIT license.
+#include <gmtl/gmtl.h>

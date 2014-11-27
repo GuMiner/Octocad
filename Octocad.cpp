@@ -162,7 +162,7 @@ void Octocad::SetupViewport()
     GLManager *pM = GLManager::GetManager();
     // Viewing aspect ratio and projection matrix.
     aspect = (float)pM->width/ (float)pM->height;
-    proj_matrix = gm::Perspective(GLManager::FOV_Y, aspect, GLManager::NEAR_PLANE, GLManager::FAR_PLANE);
+    proj_matrix = gmtl::setPerspective(proj_matrix, GLManager::FOV_Y, aspect, GLManager::NEAR_PLANE, GLManager::FAR_PLANE);
     glViewport(0, 0, pM->width, pM->height);
 }
 
@@ -178,7 +178,7 @@ void Octocad::Render(double currentTime)
         delete [] pVertices;
     }
 
-    lookAt = gm::Lookat(gm::vec3(0, 0, 0), gm::vec3(0, 20, 20), gm::vec3(0, 1, 0));
+    lookAt = GLManager::Lookat(gmtl::Vec3f(0, 0, 0), gmtl::Vec3f(20, 20, 20), gmtl::Vec3f(0, 0, 1));
     glUseProgram(boringProgram);
 
     const GLfloat color[] = {0, 0, 0, 1};
@@ -186,11 +186,12 @@ void Octocad::Render(double currentTime)
     glClearBufferfv(GL_COLOR, 0, color);
     glClearBufferfv(GL_DEPTH, 0, &one);
 
-    gm::mat4 result = proj_matrix*lookAt;
-    glUniformMatrix4fv(proj_location, 1, GL_FALSE, result);
+    gmtl::Matrix44f result = proj_matrix*lookAt;
+    glUniformMatrix4fv(proj_location, 1, GL_FALSE, result.getData());
 
-    gm::mat4 mv_matrix = gm::Rotate((float)currentTime*0.5f, gm::vec3(0.0f, 1.0f, 0.0f));
-    glUniformMatrix4fv(mv_location, 1, GL_FALSE, mv_matrix);
+    // Get the two vectors to rotate to-from by rotating the (1,1,1) src vector by the 
+    gmtl::Matrix44f mv_matrix = GLManager::Rotate((float)currentTime*0.5f, gmtl::Vec3f(0.0f, 0.0f, 1.0f));
+    glUniformMatrix4fv(mv_location, 1, GL_FALSE, mv_matrix.getData());
     glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 
     // ---------------------------------------------
@@ -231,6 +232,8 @@ bool Octocad::RunApplication()
         {
             switch(typedKey)
             {
+            case GLFW_KEY_Q:
+                std::cout << "Hit the ESCAPE key to exit, or better yet, close Octocad-2D" << std::endl;
             default:
                 std::cout << "What?" << std::endl;
                 break;
