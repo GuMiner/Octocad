@@ -2,10 +2,14 @@ Octocad
 =======
 An engineering-focused CAD software solution.
 
-Introduction
+Synopsis
 ------------
 Octocad is an octree-based 3D CAD system. Objects are represented solely using cubes, with no boundary representation. This representation
 enables a known output precision and makes CSG operations very straightforward.
+
+Status
+------
+Unfortunately, this project is on permament hold as an octree with sufficient cubes to accurately render a sphere performs very poorly. (I also have found suitable CAD programs to fit my needs) However for the technically curious, this project is a good demonstration of cross-language communication
 
 Design
 ------
@@ -15,10 +19,6 @@ Octocad is split up into two parts:
 
 These parts communicate over two named pipe connections, which are created upon process startup. Starting Octocad-2D will initialize
 Octocad, and closing Octocad-2D will close Octocad.
-
-Author Information
-------------------
-Gustave Granroth [gus.gran@gmail.com](mailto:gus.gran@gmail.com) [Website](http://helium24.net).
 
 Included Libraries
 ------------------
